@@ -32,3 +32,52 @@ steps:
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+
+    #testing
+
+- task: VSTest@2
+  inputs:
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+- task: AzurePowerShell@4
+  inputs:
+    azureSubscription: 'Free Trial(8d1015fe-a45b-4a89-8fbb-261d2de406cc)'
+    ScriptType: 'InlineScript'
+    Inline: '$basicAuth= ("{0}:{1}"-f $PATusername,$PATpassword)
+      
+      $basicAuth=[System.Text.Encoding]::UTF8.GetBytes($basicAuth)
+      
+      $basicAuth=[System.Convert]::ToBase64String($basicAuth)
+      
+      $headers= @{Authorization=("Basic {0}"-f $basicAuth)}
+      
+      $filePath="$(System.DefaultWorkingDirectory)"
+      
+      $fileName=$filePath+"/tasklog.log"
+      
+      $url= $(ProjectURL) + $(ProjectName) + "/_apis/build/builds/" + $(Build.BuildId) + "/logs?api-version=2.0"
+      
+       
+      
+      Write-Host "URL: $url"
+      
+       
+      
+      $responseBuild = Invoke-RestMethod -Uri $url -headers $headers -Method Get | select value
+      
+       
+      
+      $logid = $responseBuild.value.Count - 1;
+      
+       
+      
+      $logurl = $(ProjectURL) + $(ProjectName) + "/_apis/build/builds/" + $(Build.BuildId) + "/logs/" + $logid;
+      
+       
+      
+      $getlog = Invoke-RestMethod -Uri $logurl -headers $headers -Method Get
+      
+       
+      
+      Out-File -FilePath $filename -InputObject $getlog -Encoding ascii'
+    azurePowerShellVersion: 'LatestVersion'
