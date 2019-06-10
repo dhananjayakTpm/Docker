@@ -1,4 +1,44 @@
 # ASP.NET Core (.NET Framework)
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: '$basicAuth= ("{0}:{1}"-f $PATusername,$PATpassword)
+      
+      $basicAuth=[System.Text.Encoding]::UTF8.GetBytes($basicAuth)
+      
+      $basicAuth=[System.Convert]::ToBase64String($basicAuth)
+      
+      $headers= @{Authorization=("Basic {0}"-f $basicAuth)}
+      
+      $filePath="$(System.DefaultWorkingDirectory)"
+      
+      $fileName=$filePath+"\tasklog.log"
+      
+      $url= $(projectURL) + $(ProjectName) + "/_apis/build/builds/" + $(Build.BuildId) + "/logs?api-version=2.0"
+      
+       
+      
+      Write-Host "URL: $url"
+      
+       
+      
+      $responseBuild = Invoke-RestMethod -Uri $url -headers $headers -Method Get | select value
+      
+       
+      
+      $logid = $responseBuild.value.Count - 1;
+      
+       
+      
+      $logurl = $(projectURL) + $(ProjectName) + "/_apis/build/builds/" + $(Build.BuildId) + "/logs/" + $logid;
+      
+       
+      
+      $getlog = Invoke-RestMethod -Uri $logurl -headers $headers -Method Get
+      
+       
+      
+      Out-File -FilePath $filename -InputObject $getlog -Encoding ascii'
 - task: Docker@2
   inputs:
     command: 'buildAndPush'
